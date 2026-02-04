@@ -124,6 +124,15 @@ export default function UsersPage() {
   const [selectedRole, setSelectedRole] = useState("all");
   const [viewMode, setViewMode] = useState("table");
 
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      if (isMobile) {
+        setViewMode("grid");
+      }
+    }
+  }, []);
   const currentUser = useSelector((state) => state.auth.user);
   const { companyId } = useCompanyId();
   const router = useRouter();
