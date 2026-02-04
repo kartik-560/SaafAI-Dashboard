@@ -1,6 +1,5 @@
 @import "tailwindcss";
-
-
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 :root {
   /* Core */
   --background: #f4f7fe;
@@ -135,7 +134,7 @@
   --washroom-filter-clear: #94a3b8;
   --washroom-filter-clear-hover: #ef4444;
 
-   /* ===============================
+  /* ===============================
      ASSIGNMENTS PAGE – LIGHT MODE
      =============================== */
 
@@ -144,58 +143,53 @@
 
   /* Surface / cards */
   --assignment-surface: #ffffff;
-  --assignment-border: rgba(15, 23, 42, 0.08);
-  --assignment-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  --assignment-border: #c7ece4;
+  --assignment-shadow: 0 10px 26px rgba(16, 185, 129, 0.12);
 
   /* Header */
-  --assignment-header-bg: #f1f5f9;
-  --assignment-header-border: rgba(15, 23, 42, 0.08);
-  --assignment-title: #0f172a;
-  --assignment-subtitle: #64748b;
+  --assignment-header-bg: #d1fae5; /* mint header strip */
+  --assignment-header-border: #99f6e4;
+  --assignment-title: #064e3b; /* deep teal */
+  --assignment-subtitle: #047857;
 
   /* Accent / highlight */
-  --assignment-accent-bg: rgba(99, 102, 241, 0.08);
-  --assignment-accent-border: rgba(99, 102, 241, 0.25);
-  --assignment-accent-text: #4f46e5;
-
+  --assignment-accent-bg: #fff7ed; /* soft cream */
+  --assignment-accent-border: #fed7aa; /* light orange */
+  --assignment-accent-text: #ea580c;
   /* Mode toggle */
-  --assignment-toggle-bg: rgba(15, 23, 42, 0.08);
-  --assignment-toggle-active-bg: #6366f1;
+  --assignment-toggle-bg: #ccfbf1;
+  --assignment-toggle-active-bg: #2dd4bf;
   --assignment-toggle-knob: #ffffff;
-  --assignment-toggle-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  --assignment-toggle-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
 
   /* Inputs / dropdowns */
   --assignment-input-bg: #ffffff;
-  --assignment-input-border: rgba(15, 23, 42, 0.12);
-  --assignment-input-focus-border: #6366f1;
-  --assignment-input-text: #0f172a;
-  --assignment-input-placeholder: #94a3b8;
+  --assignment-input-border: #bae6fd;
+  --assignment-input-focus-border: #2dd4bf;
+  --assignment-input-text: #064e3b;
+  --assignment-input-placeholder: #6b7280;
 
   /* Dropdown surfaces */
   --assignment-dropdown-bg: #ffffff;
-  --assignment-dropdown-border: rgba(15, 23, 42, 0.08);
-  --assignment-dropdown-hover: rgba(15, 23, 42, 0.04);
-  --assignment-dropdown-selected: rgba(99, 102, 241, 0.12);
+  --assignment-dropdown-border: #bae6fd;
+  --assignment-dropdown-hover: #ecfeff;
+  --assignment-dropdown-selected: #ccfbf1;
 
   /* Chips (selected users / locations) */
-  --assignment-chip-bg: rgba(15, 23, 42, 0.04);
-  --assignment-chip-border: rgba(99, 102, 241, 0.25);
-  --assignment-chip-text: #0f172a;
+  --assignment-chip-bg: #ecfeff;
+  --assignment-chip-border: #67e8f9;
+  --assignment-chip-text: #065f46;
   --assignment-chip-remove-hover: #ef4444;
 
   /* Primary action */
-  --assignment-primary-bg: linear-gradient(
-    90deg,
-    #6366f1 0%,
-    #818cf8 100%
-  );
+  --assignment-primary-bg: linear-gradient(90deg, #fb923c 0%, #fbbf24 100%);
   --assignment-primary-hover-bg: linear-gradient(
     90deg,
-    #4f46e5 0%,
-    #6366f1 100%
+    #f97316 0%,
+    #f59e0b 100%
   );
   --assignment-primary-text: #ffffff;
-  --assignment-primary-shadow: 0 10px 22px rgba(99, 102, 241, 0.25);
+  --assignment-primary-shadow: 0 12px 26px rgba(251, 146, 60, 0.45);
 
   /* Loading / validating */
   --assignment-loading-text: #4f46e5;
@@ -210,6 +204,21 @@
 
   /* Dividers */
   --assignment-divider: rgba(15, 23, 42, 0.08);
+
+  --assignment-toast-error-bg: rgba(239, 68, 68, 0.12);
+  --assignment-toast-error-border: rgba(239, 68, 68, 0.4);
+  --assignment-toast-error-text: #b91c1c;
+
+  --assignment-toast-warning-bg: rgba(251, 191, 36, 0.12);
+  --assignment-toast-warning-border: rgba(251, 191, 36, 0.45);
+  --assignment-toast-warning-text: #92400e;
+
+  --assignment-toast-success-bg: rgba(34, 197, 94, 0.12);
+  --assignment-toast-success-border: rgba(34, 197, 94, 0.45);
+  --assignment-toast-success-text: #065f46;
+
+  --assignment-toast-btn-bg: rgba(15, 23, 42, 0.08);
+  --assignment-toast-btn-text: #0f172a;
 }
 
 html[data-theme="dark"] {
@@ -334,7 +343,7 @@ html[data-theme="dark"] {
   --washroom-filter-bg: #020617;
   --washroom-filter-text: #94a3b8;
 
-   --washroom-delete-bg: #c20909;
+  --washroom-delete-bg: #c20909;
 
   --washroom-filter-active-bg: #0f172a;
   --washroom-filter-active-text: #60a5fa;
@@ -343,81 +352,92 @@ html[data-theme="dark"] {
   --washroom-filter-clear: #64748b;
   --washroom-filter-clear-hover: #f87171;
 
-    /* ===============================
+  /* ===============================
      ASSIGNMENTS PAGE – LIGHT MODE
      =============================== */
 
   /* Page background */
-  --assignment-bg: #f8fafc;
+  --assignment-bg: #020617;
 
   /* Surface / cards */
-  --assignment-surface: #ffffff;
-  --assignment-border: rgba(15, 23, 42, 0.08);
-  --assignment-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  --assignment-surface: #020617;
+  --assignment-border: rgba(255, 255, 255, 0.08);
+  --assignment-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
 
   /* Header */
-  --assignment-header-bg: #f1f5f9;
-  --assignment-header-border: rgba(15, 23, 42, 0.08);
-  --assignment-title: #0f172a;
-  --assignment-subtitle: #64748b;
+  --assignment-header-bg: rgba(255, 255, 255, 0.03);
+  --assignment-header-border: rgba(255, 255, 255, 0.08);
+  --assignment-title: #f8fafc;
+  --assignment-subtitle: #94a3b8;
 
   /* Accent / highlight */
-  --assignment-accent-bg: rgba(99, 102, 241, 0.08);
-  --assignment-accent-border: rgba(99, 102, 241, 0.25);
-  --assignment-accent-text: #4f46e5;
+  --assignment-accent-bg: rgba(99, 102, 241, 0.15);
+  --assignment-accent-border: rgba(99, 102, 241, 0.4);
+  --assignment-accent-text: #a5b4fc;
 
   /* Mode toggle */
-  --assignment-toggle-bg: rgba(15, 23, 42, 0.08);
+  --assignment-toggle-bg: rgba(255, 255, 255, 0.12);
   --assignment-toggle-active-bg: #6366f1;
   --assignment-toggle-knob: #ffffff;
-  --assignment-toggle-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  --assignment-toggle-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 
   /* Inputs / dropdowns */
-  --assignment-input-bg: #ffffff;
-  --assignment-input-border: rgba(15, 23, 42, 0.12);
-  --assignment-input-focus-border: #6366f1;
-  --assignment-input-text: #0f172a;
-  --assignment-input-placeholder: #94a3b8;
+  --assignment-input-bg: #0f172a;
+  --assignment-input-border: rgba(255, 255, 255, 0.12);
+  --assignment-input-focus-border: #818cf8;
+  --assignment-input-text: #e5e7eb;
+  --assignment-input-placeholder: #64748b;
 
   /* Dropdown surfaces */
-  --assignment-dropdown-bg: #ffffff;
-  --assignment-dropdown-border: rgba(15, 23, 42, 0.08);
-  --assignment-dropdown-hover: rgba(15, 23, 42, 0.04);
-  --assignment-dropdown-selected: rgba(99, 102, 241, 0.12);
+  --assignment-dropdown-bg: #020617;
+  --assignment-dropdown-border: rgba(255, 255, 255, 0.08);
+  --assignment-dropdown-hover: rgba(255, 255, 255, 0.06);
+  --assignment-dropdown-selected: rgba(99, 102, 241, 0.2);
 
   /* Chips (selected users / locations) */
-  --assignment-chip-bg: rgba(15, 23, 42, 0.04);
-  --assignment-chip-border: rgba(99, 102, 241, 0.25);
-  --assignment-chip-text: #0f172a;
-  --assignment-chip-remove-hover: #ef4444;
+  --assignment-chip-bg: rgba(255, 255, 255, 0.06);
+  --assignment-chip-border: rgba(99, 102, 241, 0.35);
+  --assignment-chip-text: #e5e7eb;
+  --assignment-chip-remove-hover: #f87171;
 
   /* Primary action */
-  --assignment-primary-bg: linear-gradient(
-    90deg,
-    #6366f1 0%,
-    #818cf8 100%
-  );
+  --assignment-primary-bg: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
   --assignment-primary-hover-bg: linear-gradient(
     90deg,
     #4f46e5 0%,
-    #6366f1 100%
+    #4338ca 100%
   );
   --assignment-primary-text: #ffffff;
-  --assignment-primary-shadow: 0 10px 22px rgba(99, 102, 241, 0.25);
+  --assignment-primary-shadow: 0 14px 30px rgba(99, 102, 241, 0.45);
 
   /* Loading / validating */
-  --assignment-loading-text: #4f46e5;
+  --assignment-loading-text: #a5b4fc;
 
   /* Warnings / permissions */
-  --assignment-warning-bg: rgba(251, 146, 60, 0.12);
-  --assignment-warning-border: rgba(251, 146, 60, 0.4);
-  --assignment-warning-text: #c2410c;
+  --assignment-warning-bg: rgba(251, 146, 60, 0.18);
+  --assignment-warning-border: rgba(251, 146, 60, 0.45);
+  --assignment-warning-text: #fdba74;
 
   /* Success indicator */
-  --assignment-success-dot: #22c55e;
+  --assignment-success-dot: #4ade80;
 
   /* Dividers */
-  --assignment-divider: rgba(15, 23, 42, 0.08);
+  --assignment-divider: rgba(255, 255, 255, 0.08);
+
+  --assignment-toast-error-bg: rgba(239, 68, 68, 0.18);
+  --assignment-toast-error-border: rgba(239, 68, 68, 0.55);
+  --assignment-toast-error-text: #fca5a5;
+
+  --assignment-toast-warning-bg: rgba(251, 191, 36, 0.2);
+  --assignment-toast-warning-border: rgba(251, 191, 36, 0.6);
+  --assignment-toast-warning-text: #fde68a;
+
+  --assignment-toast-success-bg: rgba(34, 197, 94, 0.2);
+  --assignment-toast-success-border: rgba(34, 197, 94, 0.6);
+  --assignment-toast-success-text: #6ee7b7;
+
+  --assignment-toast-btn-bg: rgba(255, 255, 255, 0.08);
+  --assignment-toast-btn-text: #e5e7eb;
 }
 
 .action {

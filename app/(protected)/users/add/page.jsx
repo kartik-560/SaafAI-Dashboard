@@ -142,8 +142,8 @@ export default function AddUserPage() {
               </div>
             </div> */}
 
-            <div class="bg-[#CBF3F0] px-6 sm:px-8 py-5 border-b  border-[#CBF3F1] flex justify-between items-center">
-              <div class="flex items-center gap-3">
+            <div className="bg-[#CBF3F0] px-6 sm:px-8 py-5 border-b  border-[#CBF3F1] flex justify-between items-center">
+              <div className="flex items-center gap-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -151,10 +151,10 @@ export default function AddUserPage() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="lucide lucide-user-plus text-[#FF9F1C]"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-user-plus text-[#FF9F1C]"
                   aria-hidden="true"
                 >
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -162,7 +162,7 @@ export default function AddUserPage() {
                   <line x1="19" x2="19" y1="8" y2="14"></line>
                   <line x1="22" x2="16" y1="11" y2="11"></line>
                 </svg>
-                <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-[#0f0f0f]">
+                <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-[#0f0f0f]">
                   Add New User
                 </h1>
               </div>
@@ -189,7 +189,7 @@ export default function AddUserPage() {
                   Add New User
                 </h1>
               </div> */}
-              <div class="h-2 w-2 rounded-full bg-[#28C76F] animate-pulse"></div>
+              <div className="h-2 w-2 rounded-full bg-[#28C76F] animate-pulse"></div>
             </div>
             {/* Form Content */}
             <div className="p-6 sm:p-8">

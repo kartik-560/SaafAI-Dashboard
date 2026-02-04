@@ -531,8 +531,8 @@ export default function UserForm({
         </div>
       </div> */}
 
-      <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-xl bg-[#CBF3F0] flex items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-[#CBF3F0] flex items-center justify-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -540,10 +540,10 @@ export default function UserForm({
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="lucide lucide-building2 lucide-building-2 text-[#FF9F1C]"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="lucide lucide-building2 lucide-building-2 text-[#FF9F1C]"
             aria-hidden="true"
           >
             <path d="M10 12h4"></path>
@@ -554,10 +554,10 @@ export default function UserForm({
           </svg>
         </div>
         <div>
-          <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">
             Assigned Operation Node
           </h3>
-          <p class="text-xs font-medium text-slate-500">
+          <p className="text-xs font-medium text-slate-500">
             Select the operation node for this user
           </p>
         </div>

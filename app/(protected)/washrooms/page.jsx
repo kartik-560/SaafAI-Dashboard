@@ -36,7 +36,7 @@ import { useRequirePermission } from "@/shared/hooks/useRequirePermission";
 import { MODULES } from "@/shared/constants/permissions";
 
 function WashroomsPage() {
-  // State Management (Preserved)
+  // State Management
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +87,9 @@ function WashroomsPage() {
   const canToggleStatus = hasPermission(MODULES.LOCATIONS, "toggle_status");
   const canAssignCleaner = canAdd(MODULES.ASSIGNMENTS);
 
-  // console.log(facilityCompanyId, "facility company id selected");
-  // console.log(typeof facilityCompanyId, "fac type");
   // --- Helpers & Logic ---
 
   const handleSort = (column) => {
-    // Reset all other sorts
     setNameSortOrder(null);
     setCurrentScoreSortOrder(null);
     setAvgScoreSortOrder(null);
@@ -233,7 +230,6 @@ function WashroomsPage() {
       );
     }
     if (facilityCompanyId) {
-      console.log(facilityCompanyId, "id of facility");
       filtered = filtered.filter(
         (item) =>
           String(item.facility_company_id) === String(facilityCompanyId),
@@ -362,6 +358,7 @@ function WashroomsPage() {
       return { color: "text-red-600", bg: "bg-red-50", label: "Terrible" };
     return { color: "text-slate-500", bg: "bg-slate-100", label: "No rating" };
   };
+
   const handleViewLocation = (lat, lng) => {
     window.open(`https://maps.google.com/?q=${lat},${lng}`, "_blank");
   };
@@ -452,14 +449,12 @@ function WashroomsPage() {
     setStatusSortOrder(null);
   };
 
-  // --- Render Helpers ---
-
   // Cleaner Badge Rendering
   const renderCleanerBadge = (locationName, cleaners) => {
     if (!cleaners || cleaners.length === 0) {
       return (
         <span
-          className="text-xs  italic"
+          className="text-xs italic"
           style={{ color: "var(--washroom-text-muted)" }}
         >
           Unassigned
@@ -491,10 +486,193 @@ function WashroomsPage() {
     );
   };
 
+  // --- REUSABLE CARD COMPONENT (Used in Grid & Mobile view) ---
+  const WashroomCard = ({ item, index }) => (
+    <div
+      onClick={() => handleView(item.id)}
+      className="group rounded-2xl p-6 cursor-pointer relative overflow-hidden transition-all duration-300 hover:-translate-y-1"
+      style={{
+        background: "var(--washroom-surface)",
+        border: "1px solid var(--washroom-border)",
+        boxShadow: "var(--washroom-shadow)",
+      }}
+    >
+      {/* Top Horizontal Line on Hover */}
+      <div
+        className="absolute top-0 left-0 w-full h-1 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+        style={{
+          background:
+            "linear-gradient(90deg, var(--washroom-primary), var(--washroom-primary-hover))",
+        }}
+      />
+
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg"
+            style={{
+              background: "var(--washroom-score-bg)",
+              color: "var(--washroom-score-text)",
+            }}
+          >
+            {item.name?.charAt(0).toUpperCase()}
+          </div>
+
+          <div>
+            <h3
+              className="font-bold text-lg leading-tight transition-colors"
+              style={{ color: "var(--washroom-title)" }}
+            >
+              {item.name}
+            </h3>
+            <p
+              className="text-xs mt-1 font-medium tracking-wide"
+              style={{ color: "var(--washroom-subtitle)" }}
+            >
+              ID: #{String(index + 1).padStart(2, "0")} •{" "}
+              {item.location_types?.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Menu */}
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() =>
+              setActionsMenuOpen(actionsMenuOpen === item.id ? null : item.id)
+            }
+            className="p-2 rounded-full transition-colors"
+            style={{ color: "var(--washroom-subtitle)" }}
+          >
+            <MoreVertical size={18} />
+          </button>
+
+          {actionsMenuOpen === item.id && (
+            <LocationActionsMenu
+              item={item}
+              location_id={item.id}
+              onClose={() => setActionsMenuOpen(null)}
+              onDelete={(loc) => setDeleteModal({ open: true, location: loc })}
+              canDeleteLocation={canDeleteLocation}
+              canEditLocation={canEditLocation}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Metrics */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div
+          className="rounded-xl p-3"
+          style={{
+            background: "var(--washroom-input-bg)",
+            border: "1px solid var(--washroom-border)",
+          }}
+        >
+          <p
+            className="text-[10px] font-bold uppercase tracking-wider mb-1"
+            style={{ color: "var(--washroom-subtitle)" }}
+          >
+            Current Score
+          </p>
+          <div className="flex items-baseline gap-1">
+            <span
+              className="text-2xl font-bold"
+              style={{ color: "var(--washroom-title)" }}
+            >
+              {Math.round(item.currentScore * 10) / 10 || "-"}
+            </span>
+            <span
+              className="text-xs font-medium"
+              style={{ color: "var(--washroom-subtitle)" }}
+            >
+              / 10
+            </span>
+          </div>
+        </div>
+
+        <div
+          className="rounded-xl p-3"
+          style={{
+            background: "var(--washroom-input-bg)",
+            border: "1px solid var(--washroom-border)",
+          }}
+        >
+          <p
+            className="text-[10px] font-bold uppercase tracking-wider mb-1"
+            style={{ color: "var(--washroom-subtitle)" }}
+          >
+            Avg Rating
+          </p>
+          <div className="flex items-center gap-1.5">
+            <Star
+              className="w-4 h-4"
+              style={{ color: "var(--washroom-primary)" }}
+              fill="currentColor"
+            />
+            <span
+              className="text-lg font-bold"
+              style={{ color: "var(--washroom-title)" }}
+            >
+              {item.averageRating || "0.0"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div
+        className="flex items-center justify-between pt-4"
+        style={{
+          borderTop: "1px solid var(--washroom-border)",
+        }}
+      >
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (canToggleStatus) setStatusModal({ open: true, location: item });
+          }}
+        >
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{
+              background: item.status
+                ? "var(--washroom-status-dot-active)"
+                : "var(--washroom-status-dot-inactive)",
+            }}
+          />
+          <span
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{
+              color: item.status
+                ? "var(--washroom-status-active-text)"
+                : "var(--washroom-status-inactive-text)",
+            }}
+          >
+            {item.status ? "Active" : "Inactive"}
+          </span>
+        </div>
+
+        <div className="text-xs font-medium">
+          {renderCleanerBadge(item.name, item.cleaner_assignments)}
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen px-4 bg-slate-50">
-        <Loader size="large" color="#FFAB2D" message="Loading washrooms..." />
+      <div
+        className="flex justify-center items-center h-screen px-4"
+        style={{ background: "var(--washroom-bg)" }}
+      >
+        <Loader
+          size="large"
+          color="var(--washroom-primary)"
+          message="Loading washrooms..."
+        />
       </div>
     );
   }
@@ -505,15 +683,10 @@ function WashroomsPage() {
 
       {/* Main Container */}
       <div
-        className="min-h-screen  p-6 font-sans 
-       max-[786px]:flex
-    max-[786px]:items-center
-    max-[786px]:justify-center
-    max-[786px]:mx-auto
-      "
+        className="min-h-screen p-6 font-sans max-[786px]:flex max-[786px]:items-center max-[786px]:justify-center max-[786px]:mx-auto"
         style={{ background: "var(--washroom-bg)" }}
       >
-        <div className="max-w-[1600px] mx-auto">
+        <div className="max-w-[1600px] mx-auto w-full">
           {/* Header Card */}
           <div
             className="rounded-2xl p-4 sm:p-6 mb-6"
@@ -561,7 +734,7 @@ function WashroomsPage() {
                 {canAddLocation && (
                   <button
                     onClick={handleAddToilet}
-                    className="w-full sm:w-auto justify-center  px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-sm uppercase tracking-wide"
+                    className="w-full sm:w-auto justify-center px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-sm uppercase tracking-wide"
                     style={{
                       background: "var(--washroom-primary)",
                       color: "var(--washroom-primary-text)",
@@ -583,7 +756,7 @@ function WashroomsPage() {
                 {canAssignCleaner && (
                   <button
                     onClick={handleAssignWashroom}
-                    className="w-full sm:w-auto justify-center  px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm uppercase tracking-wide"
+                    className="w-full sm:w-auto justify-center px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm uppercase tracking-wide"
                     style={{
                       background: "var(--washroom-primary)",
                       color: "var(--washroom-primary-text)",
@@ -662,8 +835,6 @@ function WashroomsPage() {
                 }}
                 value={facilityCompanyId}
                 onChange={(e) => {
-                  // console.log(e.target.value, "e.target.value 1");
-                  // console.log(typeof e.target.value, "e.target.value");
                   setFacilityCompanyId(e.target.value);
                   const selected = facilityCompanies.find(
                     (fc) => fc.id === e.target.value,
@@ -840,8 +1011,8 @@ function WashroomsPage() {
           {/* Table Container */}
           {filteredList.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-16 text-center lg:col-span-2">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#FFAB2D]/20 to-[#FF8C42]/20 flex items-center justify-center">
-                <MapPin className="h-12 w-12 text-[#FF8C42]" />
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-50 flex items-center justify-center">
+                <MapPin className="h-12 w-12 text-orange-400" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">
                 No Washrooms Found
@@ -856,202 +1027,7 @@ function WashroomsPage() {
                 {viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredList.map((item, index) => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleView(item.id)}
-                        className="
-        group rounded-2xl p-6 cursor-pointer relative overflow-hidden
-        transition-all duration-300 hover:-translate-y-1
-      "
-                        style={{
-                          background: "var(--washroom-surface)",
-                          border: "1px solid var(--washroom-border)",
-                          boxShadow: "var(--washroom-shadow)",
-                        }}
-                      >
-                        {/* Top Accent */}
-                        <div
-                          className="absolute top-0 left-0 w-full h-1 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-                          style={{
-                            background:
-                              "linear-gradient(90deg, var(--washroom-primary), var(--washroom-primary-hover))",
-                          }}
-                        />
-
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg"
-                              style={{
-                                background: "var(--washroom-score-bg)",
-                                color: "var(--washroom-score-text)",
-                              }}
-                            >
-                              {item.name?.charAt(0).toUpperCase()}
-                            </div>
-
-                            <div>
-                              <h3
-                                className="font-bold text-lg leading-tight transition-colors"
-                                style={{ color: "var(--washroom-title)" }}
-                              >
-                                {item.name}
-                              </h3>
-                              <p
-                                className="text-xs mt-1 font-medium tracking-wide"
-                                style={{ color: "var(--washroom-subtitle)" }}
-                              >
-                                ID: #{String(index + 1).padStart(2, "0")} •{" "}
-                                {item.location_types?.name}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Menu */}
-                          <div
-                            className="relative"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              onClick={() =>
-                                setActionsMenuOpen(
-                                  actionsMenuOpen === item.id ? null : item.id,
-                                )
-                              }
-                              className="p-2 rounded-full transition-colors"
-                              style={{ color: "var(--washroom-subtitle)" }}
-                            >
-                              <MoreVertical size={18} />
-                            </button>
-
-                            {actionsMenuOpen === item.id && (
-                              <LocationActionsMenu
-                                item={item}
-                                location_id={item.id}
-                                onClose={() => setActionsMenuOpen(null)}
-                                onDelete={(loc) =>
-                                  setDeleteModal({ open: true, location: loc })
-                                }
-                                canDeleteLocation={canDeleteLocation}
-                                canEditLocation={canEditLocation}
-                              />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Metrics */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                          <div
-                            className="rounded-xl p-3"
-                            style={{
-                              background: "var(--washroom-input-bg)",
-                              border: "1px solid var(--washroom-border)",
-                            }}
-                          >
-                            <p
-                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
-                              style={{ color: "var(--washroom-subtitle)" }}
-                            >
-                              Current Score
-                            </p>
-                            <div className="flex items-baseline gap-1">
-                              <span
-                                className="text-2xl font-bold"
-                                style={{ color: "var(--washroom-title)" }}
-                              >
-                                {Math.round(item.currentScore * 10) / 10 || "-"}
-                              </span>
-                              <span
-                                className="text-xs font-medium"
-                                style={{ color: "var(--washroom-subtitle)" }}
-                              >
-                                / 10
-                              </span>
-                            </div>
-                          </div>
-
-                          <div
-                            className="rounded-xl p-3"
-                            style={{
-                              background: "var(--washroom-input-bg)",
-                              border: "1px solid var(--washroom-border)",
-                            }}
-                          >
-                            <p
-                              className="text-[10px] font-bold uppercase tracking-wider mb-1"
-                              style={{ color: "var(--washroom-subtitle)" }}
-                            >
-                              Avg Rating
-                            </p>
-                            <div className="flex items-center gap-1.5">
-                              <Star
-                                className="w-4 h-4"
-                                style={{ color: "var(--washroom-primary)" }}
-                                fill="currentColor"
-                              />
-                              <span
-                                className="text-lg font-bold"
-                                style={{ color: "var(--washroom-title)" }}
-                              >
-                                {item.averageRating || "0.0"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Footer */}
-                        <div
-                          className="flex items-center justify-between pt-4"
-                          style={{
-                            borderTop: "1px solid var(--washroom-border)",
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{
-                                background: item.status
-                                  ? "var(--washroom-status-dot-active)"
-                                  : "var(--washroom-status-dot-inactive)",
-                              }}
-                            />
-                            <span
-                              className="text-xs font-bold uppercase tracking-wider"
-                              style={{
-                                color: item.status
-                                  ? "var(--washroom-status-active-text)"
-                                  : "var(--washroom-status-inactive-text)",
-                              }}
-                            >
-                              {item.status ? "Active" : "Inactive"}
-                            </span>
-                          </div>
-
-                          {item.cleaner_assignments?.length > 0 ? (
-                            <div
-                              className="text-xs font-medium"
-                              style={{ color: "var(--washroom-subtitle)" }}
-                            >
-                              <span
-                                className="font-bold"
-                                style={{ color: "var(--washroom-title)" }}
-                              >
-                                {item.cleaner_assignments.length}
-                              </span>{" "}
-                              Cleaner
-                              {item.cleaner_assignments.length > 1 ? "s" : ""}
-                            </div>
-                          ) : (
-                            <span
-                              className="text-xs italic"
-                              style={{ color: "var(--washroom-subtitle)" }}
-                            >
-                              Unassigned
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <WashroomCard key={item.id} item={item} index={index} />
                     ))}
                   </div>
                 ) : (
@@ -1065,7 +1041,7 @@ function WashroomsPage() {
                   >
                     {/* Grid Header - FIXED WIDTHS to prevent scroll */}
                     <div
-                      className="grid grid-cols-[60px_2fr_1.2fr_100px_100px_1.5fr_1fr_120px_90px] gap-2 px-6 py-4  text-[11px] font-bold  uppercase tracking-widest items-center"
+                      className="grid grid-cols-[60px_2fr_1.2fr_100px_100px_1.5fr_1fr_120px_90px] gap-2 px-6 py-4 text-[11px] font-bold uppercase tracking-widest items-center"
                       style={{
                         background: "var(--washroom-table-header-bg)",
                         borderBottom: "1px solid var(--washroom-table-divider)",
@@ -1117,204 +1093,192 @@ function WashroomsPage() {
 
                     {/* Grid Body */}
                     <div
-                      className="divide-y"
-                      style={{ borderColor: "var(--washroom-divider)" }}
+                      className="divide-y-0" // Removed divide-y
                     >
-                      {filteredList.length === 0 ? (
-                        <div className="p-12 text-center">
-                          <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                            style={{ background: "var(--washroom-muted-bg)" }}
-                          >
-                            <MapPin
-                              className="h-8 w-8"
-                              style={{ color: "var(--washroom-muted-text)" }}
-                            />
+                      {filteredList.map((item, index) => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleView(item.id)}
+                          className="grid grid-cols-[60px_2fr_1.2fr_100px_100px_1.5fr_1fr_120px_90px] gap-2 px-6 py-4 items-center cursor-pointer transition-all duration-200 border-l-4 border-l-transparent hover:border-l-blue-600 hover:bg-blue-50/50"
+                        >
+                          {/* Rank */}
+                          <div className="flex justify-center">
+                            <span
+                              className="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg"
+                              style={{
+                                background: "var(--washroom-muted-bg)",
+                                color: "var(--washroom-accent)",
+                              }}
+                            >
+                              {String(index + 1).padStart(2, "0")}
+                            </span>
                           </div>
 
-                          <h3
-                            className="text-lg font-bold"
-                            style={{ color: "var(--washroom-text-strong)" }}
-                          >
-                            No washrooms found
-                          </h3>
-
-                          <p
-                            className="text-sm mt-1"
-                            style={{ color: "var(--washroom-text-muted)" }}
-                          >
-                            Try adjusting your filters
-                          </p>
-                        </div>
-                      ) : (
-                        filteredList.map((item, index) => (
-                          <div
-                            key={item.id}
-                            onClick={() => handleView(item.id)}
-                            className="grid grid-cols-[60px_2fr_1.2fr_100px_100px_1.5fr_1fr_120px_90px] gap-2 px-6 py-4 items-center cursor-pointer transition-colors border-l-4 border-l-transparent"
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background =
-                                "var(--washroom-table-row-hover)")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = "transparent")
-                            }
-                          >
-                            {/* Rank */}
-                            <div className="flex justify-center">
-                              <span
-                                className="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg"
-                                style={{
-                                  background: "var(--washroom-muted-bg)",
-                                  color: "var(--washroom-accent)",
-                                }}
-                              >
-                                {String(index + 1).padStart(2, "0")}
-                              </span>
-                            </div>
-
-                            {/* Name */}
-                            <div className="min-w-0 pr-2">
-                              <p
-                                className="font-bold text-sm truncate"
-                                style={{ color: "var(--washroom-text-strong)" }}
-                              >
-                                {item.name}
-                              </p>
-                              <p
-                                className="text-[10px] mt-0.5 truncate"
-                                style={{ color: "var(--washroom-text-muted)" }}
-                              >
-                                ID: {item.id} •{" "}
-                                {new Date(item.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-
-                            {/* Zone */}
-                            <div className="min-w-0">
-                              <span
-                                className="inline-block text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide truncate max-w-full"
-                                style={{
-                                  background: "var(--washroom-muted-bg)",
-                                  color: "var(--washroom-text)",
-                                }}
-                              >
-                                {item.location_types?.name || "N/A"}
-                              </span>
-                            </div>
-
-                            {/* Current Score */}
-                            <div className="flex justify-center">
-                              <span
-                                className="px-4 py-1.5 rounded-xl text-sm font-bold"
-                                style={{
-                                  background: "var(--washroom-score-bg)",
-                                  color: "var(--washroom-score-text)",
-                                  border: "1px solid var(--washroom-border)",
-                                }}
-                              >
-                                {item.currentScore
-                                  ? Math.round(item.currentScore * 10) / 10
-                                  : "-"}
-                              </span>
-                            </div>
-
-                            {/* Rating */}
-                            <div className="flex justify-center items-center gap-1.5">
-                              <Star
-                                size={14}
-                                style={{ color: "var(--washroom-rating-star)" }}
-                                fill="currentColor"
-                              />
-                              <span
-                                className="text-sm font-bold"
-                                style={{ color: "var(--washroom-text-strong)" }}
-                              >
-                                {item.averageRating || "0.0"}
-                              </span>
-                            </div>
-
-                            {/* Cleaner */}
-                            <div className="min-w-0">
-                              {renderCleanerBadge(
-                                item.name,
-                                item.cleaner_assignments,
-                              )}
-                            </div>
-
-                            {/* Facility */}
-                            <div className="min-w-0">
-                              <span
-                                className="text-xs font-medium truncate block"
-                                style={{ color: "var(--washroom-text-muted)" }}
-                              >
-                                {item.facility_companies?.name || "N/A"}
-                              </span>
-                            </div>
-
-                            {/* Status */}
-                            <div
-                              className="flex justify-center"
-                              onClick={(e) => e.stopPropagation()}
+                          {/* Name */}
+                          <div className="min-w-0 pr-2">
+                            <p
+                              className="font-bold text-sm truncate"
+                              style={{ color: "var(--washroom-text-strong)" }}
                             >
-                              {canToggleStatus && (
-                                <button
-                                  onClick={() =>
-                                    setStatusModal({
-                                      open: true,
-                                      location: item,
-                                    })
-                                  }
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all"
+                              {item.name}
+                            </p>
+                            <p
+                              className="text-[10px] mt-0.5 truncate"
+                              style={{ color: "var(--washroom-text-muted)" }}
+                            >
+                              ID: {item.id} •{" "}
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          {/* Zone */}
+                          <div className="min-w-0">
+                            <span
+                              className="inline-block text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide truncate max-w-full"
+                              style={{
+                                background: "var(--washroom-muted-bg)",
+                                color: "var(--washroom-text)",
+                              }}
+                            >
+                              {item.location_types?.name || "N/A"}
+                            </span>
+                          </div>
+
+                          {/* Current Score */}
+                          <div className="flex justify-center">
+                            <span
+                              className="px-4 py-1.5 rounded-xl text-sm font-bold"
+                              style={{
+                                background: "var(--washroom-score-bg)",
+                                color: "var(--washroom-score-text)",
+                                border: "1px solid var(--washroom-border)",
+                              }}
+                            >
+                              {item.currentScore
+                                ? Math.round(item.currentScore * 10) / 10
+                                : "-"}
+                            </span>
+                          </div>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-1.5">
+                            <Star
+                              className="w-3.5 h-3.5 text-orange-500"
+                              fill="currentColor"
+                            />
+                            <span className="text-base font-bold text-slate-800">
+                              {item.averageRating || "0.0"}
+                            </span>
+                          </div>
+
+                          {/* Cleaner */}
+                          <div className="min-w-0">
+                            {renderCleanerBadge(
+                              item.name,
+                              item.cleaner_assignments,
+                            )}
+                          </div>
+
+                          {/* Facility */}
+                          <div className="min-w-0">
+                            <span
+                              className="text-xs font-medium truncate block"
+                              style={{ color: "var(--washroom-text-muted)" }}
+                            >
+                              {item.facility_companies?.name || "N/A"}
+                            </span>
+                          </div>
+
+                          {/* Status */}
+                          <div
+                            className="flex justify-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {canToggleStatus && (
+                              <button
+                                onClick={() =>
+                                  setStatusModal({
+                                    open: true,
+                                    location: item,
+                                  })
+                                }
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all"
+                                style={{
+                                  background:
+                                    item.status === true || item.status === null
+                                      ? "var(--washroom-status-active-bg)"
+                                      : "var(--washroom-status-inactive-bg)",
+                                  color:
+                                    item.status === true || item.status === null
+                                      ? "var(--washroom-status-active-text)"
+                                      : "var(--washroom-status-inactive-text)",
+                                  borderColor:
+                                    item.status === true || item.status === null
+                                      ? "var(--washroom-status-active-border)"
+                                      : "var(--washroom-status-inactive-border)",
+                                }}
+                              >
+                                <div
+                                  className="h-2 w-2 rounded-full"
                                   style={{
                                     background:
                                       item.status === true ||
                                       item.status === null
-                                        ? "var(--washroom-status-active-bg)"
-                                        : "var(--washroom-status-inactive-bg)",
-                                    color:
-                                      item.status === true ||
-                                      item.status === null
-                                        ? "var(--washroom-status-active-text)"
-                                        : "var(--washroom-status-inactive-text)",
-                                    borderColor:
-                                      item.status === true ||
-                                      item.status === null
-                                        ? "var(--washroom-status-active-border)"
-                                        : "var(--washroom-status-inactive-border)",
+                                        ? "var(--washroom-status-dot-active)"
+                                        : "var(--washroom-status-dot-inactive)",
                                   }}
-                                >
-                                  <div
-                                    className="h-2 w-2 rounded-full"
-                                    style={{
-                                      background:
-                                        item.status === true ||
-                                        item.status === null
-                                          ? "var(--washroom-status-dot-active)"
-                                          : "var(--washroom-status-dot-inactive)",
-                                    }}
-                                  />
-                                  {item.status === true || item.status === null
-                                    ? "Active"
-                                    : "Inactive"}
-                                </button>
-                              )}
-                            </div>
+                                />
+                                {item.status ? "Active" : "Inactive"}
+                              </button>
+                            )}
+                          </div>
 
-                            {/* Action */}
+                          {/* Action */}
+                          <div
+                            className="flex justify-end gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={() =>
+                                handleViewLocation(
+                                  item.latitude,
+                                  item.longitude,
+                                )
+                              }
+                              className="p-2 rounded-lg transition-colors"
+                              style={{ color: "var(--washroom-icon-muted)" }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.background =
+                                  "var(--washroom-muted-bg)")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.background =
+                                  "transparent")
+                              }
+                            >
+                              <Navigation size={16} />
+                            </button>
+
                             <div
-                              className="flex justify-end gap-1"
-                              onClick={(e) => e.stopPropagation()}
+                              className="relative"
+                              ref={
+                                actionsMenuOpen === item.id
+                                  ? actionsMenuRef
+                                  : null
+                              }
                             >
                               <button
                                 onClick={() =>
-                                  handleViewLocation(
-                                    item.latitude,
-                                    item.longitude,
+                                  setActionsMenuOpen(
+                                    actionsMenuOpen === item.id
+                                      ? null
+                                      : item.id,
                                   )
                                 }
                                 className="p-2 rounded-lg transition-colors"
-                                style={{ color: "var(--washroom-icon-muted)" }}
+                                style={{
+                                  color: "var(--washroom-icon-muted)",
+                                }}
                                 onMouseEnter={(e) =>
                                   (e.currentTarget.style.background =
                                     "var(--washroom-muted-bg)")
@@ -1324,58 +1288,25 @@ function WashroomsPage() {
                                     "transparent")
                                 }
                               >
-                                <Navigation size={16} />
+                                <MoreVertical size={16} />
                               </button>
 
-                              <div
-                                className="relative"
-                                ref={
-                                  actionsMenuOpen === item.id
-                                    ? actionsMenuRef
-                                    : null
-                                }
-                              >
-                                <button
-                                  onClick={() =>
-                                    setActionsMenuOpen(
-                                      actionsMenuOpen === item.id
-                                        ? null
-                                        : item.id,
-                                    )
+                              {actionsMenuOpen === item.id && (
+                                <LocationActionsMenu
+                                  item={item}
+                                  location_id={item.id}
+                                  onClose={() => setActionsMenuOpen(null)}
+                                  onDelete={(location) =>
+                                    setDeleteModal({ open: true, location })
                                   }
-                                  className="p-2 rounded-lg transition-colors"
-                                  style={{
-                                    color: "var(--washroom-icon-muted)",
-                                  }}
-                                  onMouseEnter={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "var(--washroom-muted-bg)")
-                                  }
-                                  onMouseLeave={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
-                                  }
-                                >
-                                  <MoreVertical size={16} />
-                                </button>
-
-                                {actionsMenuOpen === item.id && (
-                                  <LocationActionsMenu
-                                    item={item}
-                                    location_id={item.id}
-                                    onClose={() => setActionsMenuOpen(null)}
-                                    onDelete={(location) =>
-                                      setDeleteModal({ open: true, location })
-                                    }
-                                    canDeleteLocation={canDeleteLocation}
-                                    canEditLocation={canEditLocation}
-                                  />
-                                )}
-                              </div>
+                                  canDeleteLocation={canDeleteLocation}
+                                  canEditLocation={canEditLocation}
+                                />
+                              )}
                             </div>
                           </div>
-                        ))
-                      )}
+                        </div>
+                      ))}
                     </div>
 
                     {/* Footer */}
@@ -1391,370 +1322,206 @@ function WashroomsPage() {
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Mobile Card View (Keep for responsiveness) */}
-                <div className="lg:hidden">
-                  {filteredList.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <MapPin className="h-8 w-8 text-slate-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-600 mb-2">
-                        No washrooms found
+              {/* Mobile View - Reusing the Card Component */}
+              <div className="lg:hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {filteredList.map((item, index) => (
+                    <WashroomCard key={item.id} item={item} index={index} />
+                  ))}
+                </div>
+              </div>
+
+              {/* --- MODALS (Re-styled but logic preserved) --- */}
+
+              {cleanerModal.open && (
+                <div
+                  className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                  onClick={() =>
+                    setCleanerModal({ open: false, location: null })
+                  }
+                >
+                  <div
+                    className="bg-white rounded-xl max-w-md w-full max-h-[85vh] overflow-y-scroll p-6 shadow-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800">
+                        {cleanerModal.location?.name} - Assigned Cleaners
                       </h3>
-                      <p className="text-sm text-slate-500">
-                        Try adjusting your search filters
-                      </p>
+                      <button
+                        onClick={() =>
+                          setCleanerModal({ open: false, location: null })
+                        }
+                        className="text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {filteredList.map((item, index) => (
+                    <div className="space-y-3">
+                      {cleanerModal.location?.cleaners?.map((assignment) => (
                         <div
-                          key={item.id}
-                          className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all cursor-pointer"
-                          onClick={() => handleView(item.id)}
+                          key={assignment.id}
+                          className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200"
                         >
-                          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="w-8 h-8 bg-slate-700 text-white rounded flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                {index + 1}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="font-semibold text-slate-800 text-sm truncate">
-                                  {item.name}
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                  {new Date(
-                                    item.created_at,
-                                  ).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div
-                              className="flex items-center gap-1 flex-shrink-0"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                onClick={() =>
-                                  setStatusModal({ open: true, location: item })
-                                }
-                                className={`p-1.5 rounded transition-all ${
-                                  item.status === true || item.status === null
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {item.status === true ||
-                                item.status === null ? (
-                                  <Power className="w-4 h-4" />
-                                ) : (
-                                  <PowerOff className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleViewLocation(
-                                    item.latitude,
-                                    item.longitude,
-                                  )
-                                }
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                              >
-                                <Navigation className="h-4 w-4" />
-                              </button>
-                              <div
-                                className="relative"
-                                ref={
-                                  actionsMenuOpen === item.id
-                                    ? actionsMenuRef
-                                    : null
-                                }
-                              >
-                                <button
-                                  onClick={() =>
-                                    setActionsMenuOpen(
-                                      actionsMenuOpen === item.id
-                                        ? null
-                                        : item.id,
-                                    )
-                                  }
-                                  className="p-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                                >
-                                  <EllipsisVertical className="h-4 w-4" />
-                                </button>
-                                {actionsMenuOpen === item.id && (
-                                  <LocationActionsMenu
-                                    item={item}
-                                    onClose={() => setActionsMenuOpen(null)}
-                                    onDelete={(location) =>
-                                      setDeleteModal({ open: true, location })
-                                    }
-                                    onEdit={(locationId) =>
-                                      router.push(
-                                        `/locations/${locationId}/edit`,
-                                      )
-                                    }
-                                  />
-                                )}
-                              </div>
-                            </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-800 text-sm truncate">
+                              {assignment.cleaner_user?.name || "Unknown"}
+                            </p>
+                            {assignment.cleaner_user?.phone && (
+                              <p className="text-xs text-slate-500">
+                                {assignment.cleaner_user.phone}
+                              </p>
+                            )}
                           </div>
-
-                          <div className="p-4 space-y-3">
-                            <div>
-                              <label className="text-xs font-medium text-slate-500 mb-1 block">
-                                Zone
-                              </label>
-                              {item?.location_types?.name ? (
-                                <span className="inline-flex items-center text-sm text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md font-medium">
-                                  {item.location_types.name}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-slate-400">
-                                  N/A
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-xs font-medium text-slate-500 mb-1 block">
-                                  Current Score
-                                </label>
-                                {renderRating(item.currentScore, 0)}
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-slate-500 mb-1 block">
-                                  Average Rating
-                                </label>
-                                {renderRating(
-                                  item.averageRating,
-                                  item.ratingCount,
-                                )}
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-medium text-slate-500 mb-1 block">
-                                Cleaner
-                              </label>
-                              {renderCleanerBadge(
-                                item.name,
-                                item.cleaner_assignments,
-                              )}
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-medium text-slate-500 mb-1 block">
-                                Facility Company
-                              </label>
-                              {item.facility_companies?.name ? (
-                                <span className="text-sm text-slate-700 font-medium">
-                                  {item.facility_companies.name}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-slate-400">
-                                  N/A
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${assignment.status === "assigned" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}
+                          >
+                            {assignment.status || "N/A"}
+                          </span>
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-                {/* --- MODALS (Re-styled but logic preserved) --- */}
-
-                {cleanerModal.open && (
-                  // console.log("cleaner modal", cleanerModal),
-                  <div
-                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                    onClick={() =>
-                      setCleanerModal({ open: false, location: null })
-                    }
-                  >
-                    <div
-                      className="bg-white rounded-xl max-w-md w-full max-h-[85vh] overflow-y-scroll p-6 shadow-xl"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-slate-800">
-                          {cleanerModal.location?.name} - Assigned Cleaners
-                        </h3>
-                        <button
-                          onClick={() =>
-                            setCleanerModal({ open: false, location: null })
-                          }
-                          className="text-slate-400 hover:text-slate-600"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {cleanerModal.location?.cleaners?.map((assignment) => (
-                          <div
-                            key={assignment.id}
-                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-800 text-sm truncate">
-                                {assignment.cleaner_user?.name || "Unknown"}
-                              </p>
-                              {assignment.cleaner_user?.phone && (
-                                <p className="text-xs text-slate-500">
-                                  {assignment.cleaner_user.phone}
-                                </p>
-                              )}
-                            </div>
-                            <span
-                              className={`text-xs px-2 py-1 rounded ${assignment.status === "assigned" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}
-                            >
-                              {assignment.status || "N/A"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {statusModal.open && (
-                  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div
-                          className={`p-3 rounded-full ${statusModal.location?.status === true || statusModal.location?.status === null ? "bg-red-100" : "bg-green-100"}`}
-                        >
-                          {statusModal.location?.status === true ||
-                          statusModal.location?.status === null ? (
-                            <PowerOff className="h-6 w-6 text-red-600" />
-                          ) : (
-                            <Power className="h-6 w-6 text-green-600" />
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-800">
-                            {statusModal.location?.status === true ||
-                            statusModal.location?.status === null
-                              ? "Disable"
-                              : "Enable"}{" "}
-                            Washroom
-                          </h3>
-                          <p className="text-slate-600 text-sm">
-                            Confirm status change
-                          </p>
-                        </div>
+              {statusModal.open && (
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className={`p-3 rounded-full ${statusModal.location?.status === true || statusModal.location?.status === null ? "bg-red-100" : "bg-green-100"}`}
+                      >
+                        {statusModal.location?.status === true ||
+                        statusModal.location?.status === null ? (
+                          <PowerOff className="h-6 w-6 text-red-600" />
+                        ) : (
+                          <Power className="h-6 w-6 text-green-600" />
+                        )}
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm text-slate-700">
-                          Are you sure you want to{" "}
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">
                           {statusModal.location?.status === true ||
                           statusModal.location?.status === null
-                            ? "disable"
-                            : "enable"}
-                          <strong> "{statusModal.location?.name}"</strong>?
-                        </p>
-
-                        {(statusModal.location?.status === true ||
-                          statusModal.location?.status === null) && (
-                          <p className="text-sm text-red-600 mt-2 bg-red-50 p-3 rounded-md border border-red-200">
-                            ⚠️ Disabling this washroom will automatically{" "}
-                            <strong>unassign all cleaners</strong> currently
-                            assigned to it.
-                            <br />
-                            They will need to be{" "}
-                            <strong>manually re-assigned</strong> when the
-                            washroom is enabled again.
-                          </p>
-                        )}
-
-                        {statusModal.location?.status === false && (
-                          <p className="text-sm text-blue-700 mt-2 bg-blue-50 p-3 rounded-md border border-blue-200">
-                            ℹ️ Enabling this washroom will{" "}
-                            <strong>not automatically assign cleaners</strong>.
-                            <br />
-                            Please assign cleaners manually after activation.
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3 justify-end">
-                        <button
-                          onClick={() =>
-                            setStatusModal({ open: false, location: null })
-                          }
-                          className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={confirmStatusToggle}
-                          disabled={togglingStatus === statusModal.location?.id}
-                          className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${statusModal.location?.status === true || statusModal.location?.status === null ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
-                        >
-                          {togglingStatus === statusModal.location?.id && (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          )}
-                          {togglingStatus === statusModal.location?.id
-                            ? "Processing..."
-                            : statusModal.location?.status === true ||
-                                statusModal.location?.status === null
-                              ? "Disable"
-                              : "Enable"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {deleteModal.open && (
-                  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-red-100 rounded-full">
-                          <AlertTriangle className="h-6 w-6 text-red-600" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-800">
-                            Delete Washroom
-                          </h3>
-                          <p className="text-slate-600 text-sm">
-                            This action cannot be undone
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mb-6">
-                        <p className="text-sm text-slate-700">
-                          Are you sure you want to delete "
-                          <strong>{deleteModal.location?.name}</strong>"?
+                            ? "Disable"
+                            : "Enable"}{" "}
+                          Washroom
+                        </h3>
+                        <p className="text-slate-600 text-sm">
+                          Confirm status change
                         </p>
                       </div>
-                      <div className="flex gap-3 justify-end">
-                        <button
-                          onClick={() =>
-                            setDeleteModal({ open: false, location: null })
-                          }
-                          className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                          disabled={deleting}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={confirmDelete}
-                          disabled={deleting}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
-                        >
-                          {deleting && (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          )}
-                          {deleting ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
+                    </div>
+                    <div className="mb-6">
+                      <p className="text-sm text-slate-700">
+                        Are you sure you want to{" "}
+                        {statusModal.location?.status === true ||
+                        statusModal.location?.status === null
+                          ? "disable"
+                          : "enable"}
+                        <strong> &quot;{statusModal.location?.name}&quot;</strong>?
+                      </p>
+
+                      {(statusModal.location?.status === true ||
+                        statusModal.location?.status === null) && (
+                        <p className="text-sm text-red-600 mt-2 bg-red-50 p-3 rounded-md border border-red-200">
+                          ⚠️ Disabling this washroom will automatically{" "}
+                          <strong>unassign all cleaners</strong> currently
+                          assigned to it.
+                          <br />
+                          They will need to be{" "}
+                          <strong>manually re-assigned</strong> when the
+                          washroom is enabled again.
+                        </p>
+                      )}
+
+                      {statusModal.location?.status === false && (
+                        <p className="text-sm text-blue-700 mt-2 bg-blue-50 p-3 rounded-md border border-blue-200">
+                          ℹ️ Enabling this washroom will{" "}
+                          <strong>not automatically assign cleaners</strong>.
+                          <br />
+                          Please assign cleaners manually after activation.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 justify-end">
+                      <button
+                        onClick={() =>
+                          setStatusModal({ open: false, location: null })
+                        }
+                        className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmStatusToggle}
+                        disabled={togglingStatus === statusModal.location?.id}
+                        className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${statusModal.location?.status === true || statusModal.location?.status === null ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}
+                      >
+                        {togglingStatus === statusModal.location?.id && (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {togglingStatus === statusModal.location?.id
+                          ? "Processing..."
+                          : statusModal.location?.status === true ||
+                              statusModal.location?.status === null
+                            ? "Disable"
+                            : "Enable"}
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {deleteModal.open && (
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="p-3 bg-red-100 rounded-full">
+                        <AlertTriangle className="h-6 w-6 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">
+                          Delete Washroom
+                        </h3>
+                        <p className="text-slate-600 text-sm">
+                          This action cannot be undone
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mb-6">
+                      <p className="text-sm text-slate-700">
+                        Are you sure you want to delete &quot;
+                        <strong>{deleteModal.location?.name}</strong>&quot;?
+                      </p>
+                    </div>
+                    <div className="flex gap-3 justify-end">
+                      <button
+                        onClick={() =>
+                          setDeleteModal({ open: false, location: null })
+                        }
+                        className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        disabled={deleting}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmDelete}
+                        disabled={deleting}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        {deleting && (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        )}
+                        {deleting ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
