@@ -2,12 +2,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 // import API_BASE_URL from "@/lib/utils/Constant";
 // 'http://localhost:8000/api'
-const API_BASE_URL = "https://saaf-ai-backend.vercel.app/api"
+const API_BASE_URL = "https://dash-backend-five.vercel.app/api"
 
 export const notificationApi = createApi({
   reducerPath: "notificationApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8000/api",
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
       // Get token from auth state
       const token = getState().auth.token;

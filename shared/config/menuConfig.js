@@ -605,14 +605,14 @@ export const getFullCompanyMenuTemplate = (companyId) => [
     label: "Cleaner Activity",
     simpleLabel: "Cleaner Activity",
     requiredPermission: "cleaner_reviews.view",
-    href: `/cleaner-review?companyId=${companyId}`,
+    href: `/cleaners?companyId=${companyId}`,
   },
   {
     icon: MessageSquare,
     label: "User Review",
     simpleLabel: "User Review",
     requiredPermission: "cleaner_reviews.view",
-    href: `/user-activity?companyId=${companyId}`,
+    href: `/users/review?companyId=${companyId}`,
   },
   {
     icon: FileText,

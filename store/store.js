@@ -29,6 +29,7 @@ export const store = configureStore({
     [notificationApi.reducerPath]: notificationApi.reducer,
   },
 
+
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -36,12 +37,12 @@ export const store = configureStore({
         ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
       },
     })
-      .concat
+      .concat(
       //   configurationApi.middleware,
       //   reviewApi.middleware,
       //   shiftApi.middleware,
-      //   notificationApi.middleware
-      (),
+        notificationApi.middleware
+  ),
 });
 
 // ✅ Create persistor

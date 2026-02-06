@@ -47,7 +47,7 @@ const getCompletionTime = (start, end) => {
 /* ---------------- page ---------------- */
 
 export default function CleanerReviewPage() {
-    useRequirePermission(MODULES.CLEANER_ACTIVITY);
+    useRequirePermission(MODULES.CLEANER_REVIEWS);
 
     const router = useRouter();
     const searchParams = useSearchParams();
