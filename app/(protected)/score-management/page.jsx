@@ -30,6 +30,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  ArrowLeft,
 } from "lucide-react";
 import { MODULES } from "@/shared/constants/permissions.js";
 import {
@@ -487,6 +488,20 @@ const EditableScoreCell = ({
   );
 };
 
+
+const EmptyState = ({ message = "No reviews found" }) => (
+  <div
+    className="flex flex-col items-center justify-center py-16 text-center"
+    style={{ color: "var(--muted-foreground)" }}
+  >
+    <Shield size={40} className="mb-3 opacity-60" />
+    <p className="text-sm font-medium">{message}</p>
+    <p className="text-xs mt-1 opacity-80">
+      Try adjusting filters or selecting a different company/date
+    </p>
+  </div>
+);
+
 export default function ScoreManagement() {
   useRequirePermission({
     module: MODULES.SCORES,
@@ -684,6 +699,17 @@ export default function ScoreManagement() {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-full hover:bg-[var(--muted)] transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft
+                className="w-5 h-5"
+                style={{ color: "var(--foreground)" }}
+              />
+            </button>
+
             <Shield className="w-8 h-8" style={{ color: "var(--primary)" }} />
             <h1 className="text-2xl font-bold">Score Management</h1>
           </div>
@@ -789,10 +815,10 @@ export default function ScoreManagement() {
               {/* Modified */}
               <Select value={modifiedFilter} onValueChange={setModifiedFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Scores" />
+                  <SelectValue placeholder="All Reviews" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Scores</SelectItem>
+                  <SelectItem value="all">All Reviews</SelectItem>
                   <SelectItem value="modified">Modified Only</SelectItem>
                   <SelectItem value="unmodified">Original Only</SelectItem>
                 </SelectContent>
@@ -829,8 +855,6 @@ export default function ScoreManagement() {
             </div>
           </div>
 
-
-
           {/* Table */}
           <div
             className="hidden md:block rounded-xl border overflow-hidden"
@@ -859,82 +883,90 @@ export default function ScoreManagement() {
                 </thead>
 
                 <tbody>
-                  {filteredReviews.map((review) => (
-                    <tr key={review.id} className="border-t">
-                      {/* CLEANER */}
-                      <td className="px-4 py-4 font-medium">
-                        {review.cleaner_user?.name || "—"}
-                      </td>
-
-                      {/* LOCATION */}
-                      <td className="px-4 py-4">
-                        {review.location?.name || "—"}
-                      </td>
-
-                      {/* PHOTOS */}
-                      <td className="px-4 py-4 text-center">
-                        <PhotoPreviewCell
-                          photos={review.photos}
-                          onOpenAt={(idx) => openPhotoModal(review.photos, idx)}
-                        />
-                      </td>
-
-                      {/* SCORE (EditableScoreCell) */}
-                      <td className="px-4 py-4 text-center">
-                        <EditableScoreCell
-                          review={review}
-                          canEdit={canEditScores}
-                          isOngoing={review.status !== "completed"}
-                          onSave={(id, newScore) => {
-                            setReviews((prev) =>
-                              prev.map((r) =>
-                                r.id === id
-                                  ? { ...r, score: newScore, is_modified: true }
-                                  : r,
-                              ),
-                            );
-                          }}
-                        />
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="px-4 py-4 text-center">
-                        {review.status === "completed" ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-green-700 bg-green-100">
-                            <CheckCircle size={14} /> completed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-yellow-700 bg-yellow-100">
-                            <Clock size={14} /> ongoing
-                          </span>
-                        )}
-                      </td>
-
-                      {/* MODIFIED */}
-                      <td className="px-4 py-3">
-                        <div className="flex justify-center">
-                          {!review.is_modified ? (
-                            <AlertCircle
-                              size={18}
-                              className="text-orange-500"
-                              title="Original Score"
-                            />
-                          ) : (
-                            <CheckCircle
-                              size={18}
-                              className="text-green-500"
-                              title="Modified"
-                            />
-                          )}
-                        </div>
-                      </td>
-
-                      {/* DATE */}
-                      <td className="px-4 py-4">
-                        {new Date(review.created_at).toLocaleString()}
+                  {filteredReviews.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>
+                        <EmptyState message="No reviews found for the selected filters" />
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredReviews.map((review) => (
+                      <tr key={review.id} className="border-t">
+                        {/* CLEANER */}
+                        <td className="px-4 py-4 font-medium">
+                          {review.cleaner_user?.name || "—"}
+                        </td>
+
+                        {/* LOCATION */}
+                        <td className="px-4 py-4">
+                          {review.location?.name || "—"}
+                        </td>
+
+                        {/* PHOTOS */}
+                        <td className="px-4 py-4 text-center">
+                          <PhotoPreviewCell
+                            photos={review.photos}
+                            onOpenAt={(idx) => openPhotoModal(review.photos, idx)}
+                          />
+                        </td>
+
+                        {/* SCORE (EditableScoreCell) */}
+                        <td className="px-4 py-4 text-center">
+                          <EditableScoreCell
+                            review={review}
+                            canEdit={canEditScores}
+                            isOngoing={review.status !== "completed"}
+                            onSave={(id, newScore) => {
+                              setReviews((prev) =>
+                                prev.map((r) =>
+                                  r.id === id
+                                    ? { ...r, score: newScore, is_modified: true }
+                                    : r,
+                                ),
+                              );
+                            }}
+                          />
+                        </td>
+
+                        {/* STATUS */}
+                        <td className="px-4 py-4 text-center">
+                          {review.status === "completed" ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-green-700 bg-green-100">
+                              <CheckCircle size={14} /> completed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-yellow-700 bg-yellow-100">
+                              <Clock size={14} /> ongoing
+                            </span>
+                          )}
+                        </td>
+
+                        {/* MODIFIED */}
+                        <td className="px-4 py-3">
+                          <div className="flex justify-center">
+                            {!review.is_modified ? (
+                              <AlertCircle
+                                size={18}
+                                className="text-orange-500"
+                                title="Original Score"
+                              />
+                            ) : (
+                              <CheckCircle
+                                size={18}
+                                className="text-green-500"
+                                title="Modified"
+                              />
+                            )}
+                          </div>
+                        </td>
+
+                        {/* DATE */}
+                        <td className="px-4 py-4">
+                          {new Date(review.created_at).toLocaleString()}
+                        </td>
+                      </tr>
+                    )))}
+
                 </tbody>
               </table>
             </div>
@@ -942,7 +974,9 @@ export default function ScoreManagement() {
         </div>
         {/* Mobile Cards */}
         <div className="space-y-4 md:hidden">
-          {filteredReviews.map((review) => (
+          {filteredReviews.length === 0 ? (
+            <EmptyState message="No reviews available" />
+          ) : (filteredReviews.map((review) => (
             <div
               key={review.id}
               className="rounded-xl border p-4 space-y-3"
@@ -1013,7 +1047,7 @@ export default function ScoreManagement() {
                 </span>
               </div>
             </div>
-          ))}
+          )))}
         </div>
 
       </div>

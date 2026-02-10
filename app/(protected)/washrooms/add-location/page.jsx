@@ -422,11 +422,12 @@ export default function AddWashroomForm() {
         ...prev.usage_category,
         [gender]: {
           ...prev.usage_category[gender],
-          [field]: value === "" ? 0 : parseInt(value),
+          [field]: value, // <-- allow "" or number
         },
       },
     }));
   };
+
 
   // Image Handlers
   const handleFileSelect = (e) => {
@@ -457,6 +458,8 @@ export default function AddWashroomForm() {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+
+
   // Submit Handler
   const handleSubmit = async () => {
     if (!form.name || !form.type_id) {
@@ -464,10 +467,26 @@ export default function AddWashroomForm() {
       return;
     }
 
+    const normalizedForm = {
+      ...form,
+      usage_category: {
+        men: Object.fromEntries(
+          Object.entries(form.usage_category.men).map(
+            ([k, v]) => [k, Number(v || 0)]
+          )
+        ),
+        women: Object.fromEntries(
+          Object.entries(form.usage_category.women).map(
+            ([k, v]) => [k, Number(v || 0)]
+          )
+        ),
+      },
+    };
+
     setSubmitting(true);
     try {
       const locationRes = await LocationsApi.postLocation(
-        form,
+        normalizedForm,
         companyId,
         images,
       );
@@ -634,7 +653,7 @@ export default function AddWashroomForm() {
               </div>
 
               {/* Image Count */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block ml-1">
                   Required Photo Count
                 </label>
@@ -653,7 +672,7 @@ export default function AddWashroomForm() {
                     placeholder="0"
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Hidden Pincode/State/City logic can go here if needed visually, otherwise logic handles it via map/address */}
@@ -742,9 +761,8 @@ export default function AddWashroomForm() {
                     maxLength={6}
                     value={form.pincode}
                     onChange={(e) => handleChange("pincode", e.target.value)}
-                    className={`w-full h-full px-4 rounded-xl border ${
-                      pincodeError ? "border-rose-500" : "border-slate-200"
-                    } dark:border-slate-700 bg-slate-50/30 text-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 transition-all outline-none`}
+                    className={`w-full h-full px-4 rounded-xl border ${pincodeError ? "border-rose-500" : "border-slate-200"
+                      } dark:border-slate-700 bg-slate-50/30 text-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 transition-all outline-none`}
                     placeholder="000000"
                   />
                 </div>
@@ -808,10 +826,22 @@ export default function AddWashroomForm() {
                         <input
                           type="number"
                           min="0"
-                          value={form.usage_category.men[field]}
-                          onChange={(e) =>
-                            updateUsageCategory("men", field, e.target.value)
-                          }
+                          step="1"
+                          value={form.usage_category.men[field] ?? ""}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+
+                            if (raw === "") {
+                              updateUsageCategory("men", field, "");
+                            } else {
+                              updateUsageCategory("men", field, Number(raw));
+                            }
+                          }}
+                          onBlur={() => {
+                            if (form.usage_category.men[field] === "") {
+                              updateUsageCategory("men", field, 0);
+                            }
+                          }}
                           className="w-full pl-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none transition-all"
                           placeholder="0"
                         />
@@ -841,13 +871,25 @@ export default function AddWashroomForm() {
                         <input
                           type="number"
                           min="0"
-                          value={form.usage_category.women[field]}
-                          onChange={(e) =>
-                            updateUsageCategory("women", field, e.target.value)
-                          }
+                          step="1"
+                          value={formData.usage_category.women[field] ?? ""}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+
+                            if (raw === "") {
+                              updateUsageCategory("women", field, "");
+                            } else {
+                              updateUsageCategory("women", field, Number(raw));
+                            }
+                          }}
+                          onBlur={() => {
+                            if (formData.usage_category.women[field] === "") {
+                              updateUsageCategory("women", field, 0);
+                            }
+                          }}
                           className="w-full pl-4 py-2 rounded-xl border border-rose-200 bg-white text-sm focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all"
-                          placeholder="0"
                         />
+
                       </div>
                     ),
                   )}
