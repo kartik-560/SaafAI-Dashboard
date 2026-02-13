@@ -61,11 +61,11 @@ const CardShell = ({
           </div>
           <div>
             {subtitle && (
-              <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.2em] mb-0.5">
+              <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-[0.2em] mb-0.5">
                 {subtitle}
               </p>
             )}
-            <h3 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
               {title}
             </h3>
           </div>
@@ -81,36 +81,56 @@ const CardShell = ({
 const SummaryCard = ({ label, value, icon: Icon, color, onClick }) => (
   <div
     onClick={onClick}
-    className="group relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[28px] p-6 
-    border border-slate-200/60 dark:border-slate-700/50 
-    shadow-[0_4px_24px_rgb(0,0,0,0.06)] dark:shadow-[0_4px_24px_rgb(0,0,0,0.3)]
-    hover:shadow-[0_12px_48px_rgb(6,182,212,0.18)] dark:hover:shadow-[0_12px_48px_rgb(6,182,212,0.3)]
-    overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+    className="
+      group relative 
+      bg-white/95 dark:bg-slate-900/95 
+      backdrop-blur-xl 
+      rounded-2xl 
+      px-4 py-4
+      border border-slate-200/60 dark:border-slate-700/50 
+      shadow-sm
+      hover:shadow-lg
+      overflow-hidden 
+      transition-all duration-300 
+      hover:-translate-y-1 
+      cursor-pointer
+    "
   >
-    {/* Gradient background blur */}
+    {/* Soft gradient background */}
     <div
-      className={`absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br ${color} 
-      opacity-[0.08] group-hover:opacity-[0.15] blur-3xl transition-all duration-500`}
+      className={`
+        absolute -right-6 -top-6 h-24 w-24 rounded-full 
+        bg-gradient-to-br ${color}
+        opacity-10 group-hover:opacity-20 
+        blur-2xl transition-all duration-300
+      `}
     />
 
-    <div className="relative z-10 flex items-center gap-4">
+    <div className="relative z-10 flex items-center gap-3">
       <div
-        className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-white 
-        shadow-[0_8px_24px] shadow-current/30 group-hover:shadow-current/50 transition-shadow duration-500`}
+        className={`
+          h-12 w-12 rounded-xl 
+          bg-gradient-to-br ${color} 
+          flex items-center justify-center 
+          text-white 
+          shadow-md
+        `}
       >
-        <Icon size={22} strokeWidth={2.5} />
+        <Icon size={18} strokeWidth={2.5} />
       </div>
+
       <div>
-        <p className="text-3xl font-black text-slate-800 dark:text-white tracking-tight mb-0.5">
+        <p className="text-2xl font-bold text-slate-800 dark:text-white leading-none">
           {value}
         </p>
-        <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+        <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
           {label}
         </p>
       </div>
     </div>
   </div>
 );
+
 
 // 3. Enhanced Highlights List with refined ranking badges
 const HighlightsCard = ({ locations, onViewAll }) => {
@@ -126,7 +146,7 @@ const HighlightsCard = ({ locations, onViewAll }) => {
 
   return (
     <CardShell
-      title="Top Rated Facilities"
+      title="Lowest Performing Washrooms"
       subtitle="Today's Performance"
       icon={<Sparkles size={20} />}
       headerRight={
@@ -208,11 +228,10 @@ const ActivityCard = ({ items, formatTime, onItemClick }) => (
           >
             <div className="relative flex flex-col items-center mt-1">
               <div
-                className={`h-3.5 w-3.5 rounded-full shadow-[0_0_12px] ${
-                  item?.score >= 4
-                    ? "bg-emerald-400 shadow-emerald-400/60"
-                    : "bg-cyan-400 shadow-cyan-400/60"
-                }`}
+                className={`h-3.5 w-3.5 rounded-full shadow-[0_0_12px] ${item?.score >= 4
+                  ? "bg-emerald-400 shadow-emerald-400/60"
+                  : "bg-cyan-400 shadow-cyan-400/60"
+                  }`}
               />
               {i !== items.length - 1 && (
                 <div className="w-[2px] h-full bg-gradient-to-b from-slate-200 to-transparent dark:from-slate-700 my-1.5" />
@@ -328,9 +347,9 @@ export default function ClientDashboard() {
     return diffInHours < 24
       ? `${diffInHours}h ago`
       : date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        hour: "2-digit",
+        minute: "2-digit",
+      });
   };
 
   const handleActivityClick = (item) => {
@@ -362,10 +381,10 @@ export default function ClientDashboard() {
           canViewCleanerReviews
             ? DashboardApi.getCleanerPerformance(companyId)
             : Promise.resolve({
-                success: true,
-                data: [],
-                today_completed_tasks: 0,
-              }),
+              success: true,
+              data: [],
+              today_completed_tasks: 0,
+            }),
         ];
 
         const [countRes, topLocRes, activityRes, washroomRes, cleanerRes] =
@@ -373,6 +392,8 @@ export default function ClientDashboard() {
 
         if (countRes.success) setStatsData(countRes.data);
         if (topLocRes.success) setTopLocations(topLocRes.data);
+        console.log("Top rated toilet", topLocRes.data);
+
         if (activityRes.success) setRecentActivities(activityRes.data);
         if (washroomRes.success) setWashroomGraphData(washroomRes.data);
         if (cleanerRes.success) setCleanerGraphData(cleanerRes);
@@ -388,7 +409,7 @@ export default function ClientDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-[#0B0E14] dark:to-slate-950">
+      <div className="flex justify-center items-center h-screen ">
         <Loader size="large" color="#06b6d4" message="Loading Insights..." />
       </div>
     );
@@ -414,11 +435,10 @@ export default function ClientDashboard() {
 
   return (
     <div
-      className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-slate-100 via-slate-300/60 to-slate-200 
-dark:from-[#0B0E14] dark:via-slate-950 dark:to-slate-900"
+      className="min-h-screen p-4 md:p-8"
     >
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-black text-slate-800 dark:text-white tracking-tight mb-1">
             Dashboard
@@ -436,10 +456,11 @@ dark:from-[#0B0E14] dark:via-slate-950 dark:to-slate-900"
             Fresh Insights Ready
           </span>
         </div>
-      </div>
+      </div> */}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8 lg:mt-[-40px]">
+
         {canViewLocations && (
           <SummaryCard
             label="Total Toilets"

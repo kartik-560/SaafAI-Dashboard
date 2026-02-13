@@ -10,7 +10,7 @@ import { useCompanyId } from "@/providers/CompanyProvider";
 import { usePermissions } from "@/shared/hooks/usePermission";
 import { useRequirePermission } from "@/shared/hooks/useRequirePermission";
 import { MODULES } from "@/shared/constants/permissions";
-
+import AvailabilityCard from "../../../components/AvailabilityCard";
 // API
 import LocationsApi from "@/features/locations/locations.api";
 import { fetchToiletFeaturesByName } from "@/features/configurations/configurations.api";
@@ -131,6 +131,24 @@ const EditLocationPage = () => {
   const [imagesToDelete, setImagesToDelete] = useState([]);
   const fileInputRef = useRef(null);
 
+  const defaultSchedule = {
+    mode: "TWENTY_FOUR_HOURS",
+    opens_at: "",
+    closes_at: "",
+    overnight: false,
+    days: {
+      monday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      tuesday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      wednesday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      thursday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      friday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      saturday: { open: false, opens_at: "", closes_at: "", overnight: false },
+      sunday: { open: false, opens_at: "", closes_at: "", overnight: false },
+    },
+  };
+
+
+
   // Form Data
   const [formData, setFormData] = useState({
     name: "",
@@ -149,7 +167,26 @@ const EditLocationPage = () => {
       men: { wc: 0, indian: 0, urinals: 0, shower: 0, basin: 0 },
       women: { wc: 0, indian: 0, urinals: 0, shower: 0, basin: 0 },
     },
+    schedule: defaultSchedule,
+
   });
+
+  const to24HourFormat = (time12) => {
+    if (!time12) return "";
+
+    const [time, modifier] = time12.split(" ");
+    let [hours, minutes] = time.split(":");
+
+    if (modifier === "PM" && hours !== "12") {
+      hours = String(parseInt(hours, 10) + 12);
+    }
+
+    if (modifier === "AM" && hours === "12") {
+      hours = "00";
+    }
+
+    return `${hours.padStart(2, "0")}:${minutes}`;
+  };
 
   // --- INITIAL DATA FETCHING ---
   useEffect(() => {
@@ -174,9 +211,34 @@ const EditLocationPage = () => {
 
         if (locationResult.success) {
           const data = locationResult.data;
+
           setLocation(data);
 
-          // Populate Form
+          const incomingSchedule = JSON.parse(
+            JSON.stringify(data.schedule || defaultSchedule)
+          );
+
+          // Convert stored 12h → 24h
+          if (incomingSchedule.mode === "FIXED_HOURS") {
+            if (incomingSchedule.opens_at)
+              incomingSchedule.opens_at = to24HourFormat(incomingSchedule.opens_at);
+
+            if (incomingSchedule.closes_at)
+              incomingSchedule.closes_at = to24HourFormat(incomingSchedule.closes_at);
+          }
+
+          if (incomingSchedule.mode === "DAY_WISE" && incomingSchedule.days) {
+            Object.keys(incomingSchedule.days).forEach((day) => {
+              const d = incomingSchedule.days[day];
+
+              if (d.opens_at)
+                d.opens_at = to24HourFormat(d.opens_at);
+
+              if (d.closes_at)
+                d.closes_at = to24HourFormat(d.closes_at);
+            });
+          }
+
           setFormData({
             name: data.name,
             latitude: data.latitude?.toString() || "",
@@ -194,25 +256,10 @@ const EditLocationPage = () => {
               men: { wc: 0, indian: 0, urinals: 0, shower: 0, basin: 0 },
               women: { wc: 0, indian: 0, urinals: 0, shower: 0, basin: 0 },
             },
+            schedule: incomingSchedule,
           });
-
-          // Populate Aux States
-          setExistingImages(data.images || []);
-          setSelectedFacilityCompany(data.facility_companiesId);
-          setSelectedLocationType(data.type_id);
-
-          // Populate Cities if State exists
-          if (data.state) {
-            const indiaStates = State.getStatesOfCountry("IN");
-            const selectedState = indiaStates.find(
-              (s) => s.name === data.state,
-            );
-            if (selectedState) {
-              const cities = City.getCitiesOfState("IN", selectedState.isoCode);
-              setAvailableCities(cities.map((city) => city.name));
-            }
-          }
-        } else {
+        }
+        else {
           setError(locationResult.error);
         }
 
@@ -384,17 +431,67 @@ const EditLocationPage = () => {
     }
 
     setSaving(true);
+
     try {
-      // 1. Delete marked images
+      // 🔹 Delete marked images
       for (const imageUrl of imagesToDelete) {
         await LocationsApi.deleteLocationImage(
           params.id,
           imageUrl,
-          finalCompanyId,
+          finalCompanyId
         );
       }
 
-      // 2. Normalize usage_category JUST before submit
+      // 🔹 Convert 24h → 12h
+      const to12HourFormat = (time24) => {
+        if (!time24) return "";
+        const [hour, minute] = time24.split(":");
+        const h = parseInt(hour, 10);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const hour12 = h % 12 || 12;
+        return `${hour12.toString().padStart(2, "0")}:${minute} ${ampm}`;
+      };
+
+      // 🔹 Deep clone schedule
+      const normalizedSchedule = JSON.parse(
+        JSON.stringify(formData.schedule)
+      );
+
+      // 🔹 FIXED HOURS
+      if (normalizedSchedule.mode === "FIXED_HOURS") {
+        const { opens_at, closes_at } = normalizedSchedule;
+
+        if (opens_at && closes_at) {
+          normalizedSchedule.overnight =
+            closes_at < opens_at;
+
+          normalizedSchedule.opens_at =
+            to12HourFormat(opens_at);
+
+          normalizedSchedule.closes_at =
+            to12HourFormat(closes_at);
+        }
+      }
+
+      // 🔹 DAY WISE
+      if (normalizedSchedule.mode === "DAY_WISE") {
+        Object.keys(normalizedSchedule.days).forEach((day) => {
+          const dayData = normalizedSchedule.days[day];
+
+          if (dayData.open && dayData.opens_at && dayData.closes_at) {
+            dayData.overnight =
+              dayData.closes_at < dayData.opens_at;
+
+            dayData.opens_at =
+              to12HourFormat(dayData.opens_at);
+
+            dayData.closes_at =
+              to12HourFormat(dayData.closes_at);
+          }
+        });
+      }
+
+      // 🔹 Normalize usage_category
       const normalizedUsageCategory = {
         men: Object.fromEntries(
           Object.entries(formData.usage_category.men).map(
@@ -408,7 +505,7 @@ const EditLocationPage = () => {
         ),
       };
 
-      // 3. Prepare final update payload
+      // 🔹 Final payload
       const updateData = {
         ...formData,
         name: formData.name.trim(),
@@ -417,7 +514,8 @@ const EditLocationPage = () => {
         no_of_photos: formData.no_of_photos || null,
         facility_companiesId: formData.facility_companiesId || null,
         type_id: formData.type_id || null,
-        usage_category: normalizedUsageCategory, // ✅ FIX
+        usage_category: normalizedUsageCategory,
+        schedule: normalizedSchedule, // ✅ CORRECT FIELD
       };
 
       const result = await LocationsApi.updateLocation(
@@ -425,14 +523,14 @@ const EditLocationPage = () => {
         updateData,
         finalCompanyId,
         newImages,
-        false,
+        false
       );
 
       if (result.success) {
         toast.success("Location updated successfully!");
         setTimeout(
           () => router.push(`/washrooms?companyId=${finalCompanyId}`),
-          1000,
+          1000
         );
       } else {
         toast.error(result.error || "Update failed");
@@ -444,7 +542,6 @@ const EditLocationPage = () => {
       setSaving(false);
     }
   };
-
 
   // --- RENDER HELPERS ---
   if (loading || navigationLoading)
@@ -557,7 +654,7 @@ const EditLocationPage = () => {
                 {/* Facility Type */}
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block ml-1">
-                    Facility Type
+                  Location Hirarchy
                   </label>
                   <div className="h-11">
                     <LocationTypeSelect
@@ -618,7 +715,11 @@ const EditLocationPage = () => {
                       ))}
                     </select>
                   </div>
+
+
+
                 </div>
+
 
                 {/* Photo Count */}
                 {/* <div className="space-y-2">
@@ -910,6 +1011,17 @@ const EditLocationPage = () => {
                 ))}
               </div>
             </div>
+
+            <AvailabilityCard
+              schedule={formData.schedule}
+              setSchedule={(updatedSchedule) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  schedule: updatedSchedule,
+                }))
+              }
+            />
+
           </div>
 
           {/* === RIGHT COLUMN === */}

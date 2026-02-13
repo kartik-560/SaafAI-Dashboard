@@ -590,7 +590,7 @@ const SingleLocation = () => {
         >
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2 text-[var(--washroom-title)]">
             <UserCheck className="w-4 h-4 text-[var(--washroom-subtitle)]" />
-            Assigned Users
+            Assigned Cleaners
           </h3>
 
           <p className="text-sm text-[var(--washroom-subtitle)]">
@@ -613,7 +613,7 @@ const SingleLocation = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 text-[var(--washroom-title)]">
             <UserCheck className="w-4 h-4 text-[var(--washroom-subtitle)]" />
-            Assigned Users ({assignedCleaners.length})
+            Assigned Cleaners ({assignedCleaners.length})
           </h3>
 
           <button
@@ -760,7 +760,7 @@ const SingleLocation = () => {
             Location not found
           </h2>
           <p className="text-gray-600">
-            This washroom doesn't exist or has been removed.
+            This washroom doesn&apos;t exist or has been removed.
           </p>
         </div>
       </div>
@@ -768,6 +768,126 @@ const SingleLocation = () => {
   }
 
   const navigationInfo = getNavigationInfo();
+
+  const getAvailabilityInfo = () => {
+    const schedule = location?.schedule;
+    if (!schedule) return null;
+
+    const now = new Date();
+    const currentDay = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
+
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM (24h)
+
+    // 24 HOURS
+    if (schedule.mode === "TWENTY_FOUR_HOURS") {
+      return {
+        label: "Open 24 Hours",
+        isOpen: true,
+        description: "Open all day, every day",
+      };
+    }
+
+    // FIXED HOURS
+    if (schedule.mode === "FIXED_HOURS") {
+      const { opens_at, closes_at, overnight } = schedule;
+
+      if (!opens_at || !closes_at) {
+        return {
+          label: "Fixed Hours",
+          isOpen: false,
+          description: "Hours not configured",
+        };
+      }
+
+      // Convert stored 12h → 24h for comparison
+      const to24Hour = (time12) => {
+        const [time, modifier] = time12.split(" ");
+        let [hours, minutes] = time.split(":");
+
+        if (modifier === "PM" && hours !== "12") {
+          hours = String(parseInt(hours, 10) + 12);
+        }
+
+        if (modifier === "AM" && hours === "12") {
+          hours = "00";
+        }
+
+        return `${hours.padStart(2, "0")}:${minutes}`;
+      };
+
+      const open24 = to24Hour(opens_at);
+      const close24 = to24Hour(closes_at);
+
+      let isOpen = false;
+
+      if (!overnight) {
+        isOpen = currentTime >= open24 && currentTime <= close24;
+      } else {
+        isOpen = currentTime >= open24 || currentTime <= close24;
+      }
+
+      return {
+        label: "Fixed Hours",
+        isOpen,
+        description: `${opens_at} – ${closes_at}`,
+      };
+    }
+
+    // DAY WISE
+    if (schedule.mode === "DAY_WISE") {
+      const today = schedule.days?.[currentDay];
+
+      if (!today || !today.open) {
+        return {
+          label: "Day Wise Schedule",
+          isOpen: false,
+          description: "Closed Today",
+        };
+      }
+
+      const to24Hour = (time12) => {
+        const [time, modifier] = time12.split(" ");
+        let [hours, minutes] = time.split(":");
+
+        if (modifier === "PM" && hours !== "12") {
+          hours = String(parseInt(hours, 10) + 12);
+        }
+
+        if (modifier === "AM" && hours === "12") {
+          hours = "00";
+        }
+
+        return `${hours.padStart(2, "0")}:${minutes}`;
+      };
+
+      const open24 = to24Hour(today.opens_at);
+      const close24 = to24Hour(today.closes_at);
+
+      let isOpen = false;
+
+      if (!today.overnight) {
+        isOpen = currentTime >= open24 && currentTime <= close24;
+      } else {
+        isOpen = currentTime >= open24 || currentTime <= close24;
+      }
+
+      return {
+        label: "Day Wise Schedule",
+        isOpen,
+        description: `${today.opens_at} – ${today.closes_at}`,
+        weeklySchedule: schedule.days,
+      };
+    }
+
+    return null;
+  };
+
+
+  const availabilityInfo = getAvailabilityInfo();
+
+
 
   return (
     <div className="min-h-screen washroom-page">
@@ -879,7 +999,7 @@ const SingleLocation = () => {
         <div className="bg-[var(--washroom-surface)] border border-[var(--washroom-border)] shadow-[var(--washroom-shadow)] rounded-lg
  mb-6 sm:mb-8">
           <div className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
               {/* Left Column - Image */}
               <div className="space-y-3 sm:space-y-4">
                 {/* Main Image */}
@@ -944,6 +1064,78 @@ const SingleLocation = () => {
                     ))}
                   </div>
                 )}
+
+                {availabilityInfo && (
+                  <div
+                    className="rounded-lg border p-3"
+                    style={{
+                      background: "var(--washroom-input-bg)",
+                      borderColor: "var(--washroom-border)",
+                    }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-xs text-[var(--washroom-subtitle)]">
+                          Availability
+                        </p>
+                        <p className="text-sm font-semibold text-[var(--washroom-title)]">
+                          {availabilityInfo.label}
+                        </p>
+                      </div>
+
+                      <span
+                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        style={
+                          availabilityInfo.isOpen
+                            ? {
+                              background: "var(--washroom-status-active-bg)",
+                              color: "var(--washroom-status-active-text)",
+                            }
+                            : {
+                              background: "var(--washroom-status-inactive-bg)",
+                              color: "var(--washroom-status-inactive-text)",
+                            }
+                        }
+                      >
+                        {availabilityInfo.isOpen ? "Open" : "Closed"}
+                      </span>
+                    </div>
+
+                    {/* Today Summary */}
+                    <p className="text-xs text-[var(--washroom-subtitle)] mb-2">
+                      {availabilityInfo.description}
+                    </p>
+
+                    {/* Weekly Compact Grid */}
+                    {availabilityInfo.weeklySchedule && (
+                      <div className="grid grid-cols-2 gap-y-1 text-[11px]">
+                        {Object.entries(availabilityInfo.weeklySchedule).map(
+                          ([day, value]) => (
+                            <React.Fragment key={day}>
+                              <span className="capitalize text-[var(--washroom-subtitle)]">
+                                {day.slice(0, 3)}
+                              </span>
+
+                              <span
+                                className={
+                                  value.open
+                                    ? "text-right text-[var(--washroom-title)]"
+                                    : "text-right text-gray-400"
+                                }
+                              >
+                                {value.open
+                                  ? `${value.opens_at} – ${value.closes_at}`
+                                  : "Closed"}
+                              </span>
+                            </React.Fragment>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
 
 
@@ -1024,9 +1216,14 @@ const SingleLocation = () => {
                       <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       <span>Created on {formatDate(location.created_at)}</span>
                     </div>
+
+
                   </div>
                 </div>
 
+                <div className="mt-6 sm:mt-8">
+                  {renderLocationOptions(location.options)}
+                </div>
                 {/* Action Buttons */}
                 <div className="flex flex-col xs:flex-row flex-wrap gap-2 sm:gap-3">
                   <button
@@ -1090,14 +1287,13 @@ const SingleLocation = () => {
                     </button>
                   )}
                 </div>
+
               </div>
 
             </div>
 
             {/* Amenities */}
-            <div className="mt-6 sm:mt-8">
-              {renderLocationOptions(location.options)}
-            </div>
+
 
             {/* Photo Upload Notice */}
             {location.no_of_photos && (
@@ -1761,11 +1957,11 @@ const SingleLocation = () => {
 
             <div className="mb-5 sm:mb-6">
               <p className="text-sm sm:text-base text-slate-700">
-                Are you sure you want to delete "
+                Are you sure you want to delete &quot;
                 <strong className="font-semibold">
                   {deleteModal.location?.name}
                 </strong>
-                "? This will permanently remove the location and all associated
+                &quot;? This will permanently remove the location and all associated
                 data.
               </p>
             </div>

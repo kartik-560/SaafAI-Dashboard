@@ -666,7 +666,7 @@ function WashroomsPage() {
     return (
       <div
         className="flex justify-center items-center h-screen px-4"
-        style={{ background: "var(--washroom-bg)" }}
+        // style={{ background: "var(--washroom-bg)" }}
       >
         <Loader
           size="large"
@@ -684,7 +684,7 @@ function WashroomsPage() {
       {/* Main Container */}
       <div
         className="min-h-screen p-6 font-sans max-[786px]:flex max-[786px]:items-center max-[786px]:justify-center max-[786px]:mx-auto"
-        style={{ background: "var(--washroom-bg)" }}
+        // style={{ background: "var(--washroom-bg)" }}
       >
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Header Card */}
