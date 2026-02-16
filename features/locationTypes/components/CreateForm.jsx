@@ -15,7 +15,7 @@ import {
 
 export default function CreateForm({ onCreated, allTypes }) {
   const { companyId } = useCompanyId();
-const router = useRouter();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,8 +110,11 @@ const router = useRouter();
 
       {/* ===== PARENT TYPE ===== */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold uppercase text-indigo-600">
-          Parent Type <span className="text-muted-foreground">(Optional)</span>
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+          Parent Type
+          <span className="ml-1 text-slate-400 dark:text-slate-500 normal-case font-normal">
+            (Optional)
+          </span>
         </label>
 
         <div className="relative">
@@ -119,7 +122,19 @@ const router = useRouter();
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
             disabled={isSubmitting}
-            className="w-full appearance-none rounded-xl border border-border bg-background py-3 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+            className="
+        w-full appearance-none rounded-xl py-3 pl-4 pr-10 text-sm
+        border border-slate-300 bg-white text-slate-800
+        transition-all outline-none
+        focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500
+        disabled:opacity-60
+
+        dark:bg-slate-800
+        dark:border-slate-700
+        dark:text-slate-200
+        dark:focus:ring-cyan-400/20
+        dark:focus:border-cyan-400
+      "
           >
             <option value="">—</option>
             {allTypes?.map((type) => (
@@ -129,31 +144,51 @@ const router = useRouter();
             ))}
           </select>
 
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <ChevronDown
+            className="
+        pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2
+        text-slate-400 dark:text-slate-500
+      "
+          />
         </div>
       </div>
 
+
       {/* ===== INFO BOX ===== */}
-      <div className="flex gap-3 rounded-xl bg-emerald-50 p-4 border border-emerald-100">
-        <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-          <Info className="h-4 w-4 text-emerald-600" />
+      <div className="
+  flex gap-4 rounded-xl p-4
+  border border-emerald-200 bg-emerald-50
+  dark:bg-emerald-900/20 dark:border-emerald-800
+">
+        <div className="
+    flex-shrink-0 h-9 w-9 rounded-lg
+    bg-emerald-100 dark:bg-emerald-800/40
+    flex items-center justify-center
+  ">
+          <Info className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         </div>
+
         <div>
-          <p className="text-xs font-semibold tracking-wide">
-            FUNCTIONAL RELATIONSHIP ARCHITECTURE
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
+            Functional Relationship Architecture
           </p>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+
+          <p className="
+      text-xs mt-1 leading-relaxed
+      text-slate-600 dark:text-slate-400
+    ">
             Establishing a parent organizes zones logically and enables better
             resource management across the registry.
           </p>
         </div>
       </div>
 
+
       {/* ===== ACTIONS ===== */}
       <div className="flex gap-4 pt-6">
         <button
           type="button"
-          onClick={()=>router.push("/location-types")}
+          onClick={() => router.push("/location-types")}
           disabled={isSubmitting}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-400 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >

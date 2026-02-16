@@ -16,6 +16,7 @@
     "axios": "^1.13.3",
     "chart.js": "^4.5.1",
     "country-state-city": "^3.2.1",
+    "date-fns": "^4.1.0",
     "firebase": "^12.8.0",
     "framer-motion": "^12.29.2",
     "jspdf-autotable": "^5.0.7",
